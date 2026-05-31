@@ -1,0 +1,22 @@
+name: Build atlas-whisper-diarize
+on:
+  push:
+    branches: [main]
+    paths: ['diarize/**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: tikazor
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./diarize
+          push: true
+          tags: ghcr.io/tikazor/atlas-whisper-diarize:latest
