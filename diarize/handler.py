@@ -1,4 +1,4 @@
-import base64, os, tempfile, runpod, torch
+import base64, os, tempfile, urllib.request, runpod, torch
 from faster_whisper import WhisperModel
 from pyannote.audio import Pipeline
 
@@ -17,21 +17,29 @@ if torch.cuda.is_available():
     _diarize = _diarize.to(torch.device("cuda"))
 print("Modeles charges — pret.")
 
-def _decode_audio(b64, tmp_dir):
+def _get_audio(inp, tmp_dir):
+    """Récupère le fichier audio depuis URL ou base64."""
     path = os.path.join(tmp_dir, "audio.mp3")
-    with open(path, "wb") as f:
-        f.write(base64.b64decode(b64))
+    url = inp.get("url", "")
+    b64 = inp.get("audio", "")
+    if url:
+        urllib.request.urlretrieve(url, path)
+    elif b64:
+        with open(path, "wb") as f:
+            f.write(base64.b64decode(b64))
+    else:
+        return None
     return path
 
 def handler(job):
     inp      = job.get("input", {})
-    b64      = inp.get("audio", "")
     language = inp.get("language", "fr")
     diarize  = inp.get("diarize", True)
-    if not b64:
-        return {"error": "Champ audio manquant"}
+
     with tempfile.TemporaryDirectory() as tmp:
-        path = _decode_audio(b64, tmp)
+        path = _get_audio(inp, tmp)
+        if not path:
+            return {"error": "Champ audio ou url manquant"}
         try:
             if diarize:
                 dz = _diarize(path)
