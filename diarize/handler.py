@@ -12,7 +12,7 @@ _whisper = WhisperModel(MODEL_SIZE,
 
 print("Chargement pyannote...")
 _diarize = Pipeline.from_pretrained(
-    "pyannote/speaker-diarization-3.1", token=HF_TOKEN)
+    "pyannote/speaker-diarization-3.1", use_auth_token=HF_TOKEN)
 if torch.cuda.is_available():
     _diarize = _diarize.to(torch.device("cuda"))
 print("Modeles charges — pret.")
